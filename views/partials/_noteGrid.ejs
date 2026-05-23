@@ -1,0 +1,68 @@
+<div class="grid">
+    <% if (notes.length === 0) { %>
+        <p style="color: var(--text-muted); grid-column: 1 / -1;">No notes available.</p>
+    <% } %>
+    <% notes.forEach(note => { %>
+        <div class="glass-card" style="display: flex; flex-direction: column;">
+            <div style="margin-bottom: 1rem;">
+                <h3 style="margin-bottom: 0.5rem;"><%= note.title %></h3>
+                <span class="badge"><%= note.subject %></span>
+                <% if(note.semester) { %>
+                    <span class="badge" style="background: var(--surface);">Sem <%= note.semester %></span>
+                <% } %>
+                <% if(note.branch) { %>
+                    <span class="badge" style="background: var(--surface);"><%= note.branch %></span>
+                <% } %>
+                <% if(note.is_approved === 0) { %>
+                    <span class="badge" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid #f59e0b; font-weight: bold;">Pending Approval</span>
+                <% } %>
+            </div>
+
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem; flex: 1;">
+                <%= note.description %>
+            </p>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border);">
+                <span style="font-size: 0.8rem; color: var(--text-muted);">By <%= note.username %></span>
+                <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <% if (note.note_type === 'link') { %>
+                            <a href="<%= note.file_url %>" target="_blank" class="btn btn-outline" style="padding: 0.4rem 0.8rem; display: inline-flex; align-items: center; gap: 0.3rem;" title="Open Link">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Open
+                            </a>
+                        <% } else { %>
+                            <a href="<%= note.file_url %>" target="_blank" class="btn btn-outline" style="padding: 0.4rem 0.8rem; display: inline-flex; align-items: center; gap: 0.3rem;" title="View File">
+                                <i class="fa-solid fa-file-arrow-down"></i> View
+                            </a>
+                        <% } %>
+                        <% if (note.is_approved === 0) { %>
+                            <form action="/admin/notes/<%= note.id %>/approve" method="POST" style="margin: 0;">
+                                <button type="submit" class="btn" style="background: #16a34a; padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: bold; color: white;">Approve Note</button>
+                            </form>
+                        <% } %>
+                        <form action="/admin/notes/<%= note.id %>/delete" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to completely delete this note?');">
+                            <button type="submit" class="btn" style="background: #ef4444; padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: bold; color: white;">Delete Note</button>
+                        </form>
+                    </div>
+                <% } else { %>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <% if(user) { %>
+                            <% if (user.id !== note.user_id) { %>
+                                <button type="button" onclick="openReportModal('Note', <%= note.id %>)" class="btn btn-outline" style="padding: 0.4rem 0.8rem; color: #ef4444; border-color: #ef4444;" title="Report Spam"><i class="fa-solid fa-flag"></i></button>
+                            <% } %>
+                        <% } %>
+                        <% if (note.note_type === 'link') { %>
+                            <a href="<%= note.file_url %>" target="_blank" class="btn" style="padding: 0.4rem 0.8rem; display: inline-flex; align-items: center; gap: 0.3rem;" title="Open Link">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Open
+                            </a>
+                        <% } else { %>
+                            <a href="<%= note.file_url %>" target="_blank" class="btn" style="padding: 0.4rem 0.8rem; display: inline-flex; align-items: center; gap: 0.3rem;" title="View File">
+                                <i class="fa-solid fa-file-arrow-down"></i> View
+                            </a>
+                        <% } %>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    <% }) %>
+</div>

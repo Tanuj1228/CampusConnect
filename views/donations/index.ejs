@@ -1,0 +1,117 @@
+<%- include('../partials/header') %>
+
+    <div style="border-bottom: 3px solid var(--primary); padding-bottom: 2rem; margin-bottom: 3rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1 style="font-size: 3.5rem; font-weight: 800; letter-spacing: -2px; text-transform: uppercase; margin: 0;">Donations</h1>
+            <p style="color: var(--text-muted); font-size: 1.1rem; margin-top: 0.5rem;">Donate items to campus mates or request available materials.</p>
+        </div>
+        <% if (user) { %>
+        <a href="/donations/new" class="btn btn-lg"
+            style="box-shadow: 4px 4px 0px #000; transform: translateY(-4px); border-radius: 0; border: 2px solid #000;">
+            <i class="fa-solid fa-plus" style="margin-right: 0.5rem;"></i> Donate / Request Item
+        </a>
+        <% } %>
+    </div>
+
+    <form method="GET" action="/donations" style="background: var(--surface); border: 1px solid var(--border); padding: 0.75rem 2rem; display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 2.5rem; border-radius: 4px;">
+        <!-- Left side: Title and Search -->
+        <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+            <span style="font-weight: 800; font-size: 1.1rem; color: var(--primary); text-transform: uppercase; letter-spacing: -0.5px;">Filters</span>
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; max-width: 300px;">
+                <i class="fa-solid fa-search" style="color: var(--text-muted);"></i>
+                <input type="text" name="keyword" placeholder="Search keyword..." value="<%= locals.filters && filters.keyword ? filters.keyword : '' %>" style="border: none; background: transparent; padding: 0.4rem; color: var(--text); outline: none; width: 100%; border-bottom: 1px solid var(--border);">
+            </div>
+        </div>
+        
+        <!-- Right side: Filters & Actions -->
+        <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+            <!-- Category -->
+            <select name="category" style="border: none; background: transparent; color: var(--text); font-weight: 600; font-size: 0.95rem; cursor: pointer; outline: none; padding: 0.4rem 0;">
+                <option value="" style="background: var(--surface);">All Categories</option>
+                <option value="Books" <%= locals.filters && filters.category === 'Books' ? 'selected' : '' %> style="background: var(--surface);">Books</option>
+                <option value="Stationery" <%= locals.filters && filters.category === 'Stationery' ? 'selected' : '' %> style="background: var(--surface);">Stationery</option>
+                <option value="Electronics" <%= locals.filters && filters.category === 'Electronics' ? 'selected' : '' %> style="background: var(--surface);">Electronics</option>
+                <option value="Other" <%= locals.filters && filters.category === 'Other' ? 'selected' : '' %> style="background: var(--surface);">Other</option>
+            </select>
+
+            <!-- Status -->
+            <select name="status" style="border: none; background: transparent; color: var(--text); font-weight: 600; font-size: 0.95rem; cursor: pointer; outline: none; padding: 0.4rem 0;">
+                <option value="" style="background: var(--surface);">All Active</option>
+                <option value="Available" <%= locals.filters && filters.status === 'Available' ? 'selected' : '' %> style="background: var(--surface);">Available</option>
+                <option value="Requested" <%= locals.filters && filters.status === 'Requested' ? 'selected' : '' %> style="background: var(--surface);">In Progress</option>
+            </select>
+
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button type="submit" class="btn" style="padding: 0.4rem 1rem; font-size: 0.9rem;">Filter</button>
+                <a href="/donations" class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.9rem; text-decoration: none;">Clear</a>
+            </div>
+        </div>
+    </form>
+
+    <!-- Tabs Navigation -->
+    <div style="display: flex; gap: 1rem; margin-bottom: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; flex-wrap: wrap;">
+        <button onclick="switchDonationTab('offers-tab')" id="btn-offers-tab" class="tab-btn active-tab" style="padding: 0.6rem 1.2rem; font-weight: bold; background: none; border: none; color: var(--text); cursor: pointer; border-radius: 4px; font-size: 1rem;">
+            <i class="fa-solid fa-gift"></i> Items Offered (Donations)
+        </button>
+        <button onclick="switchDonationTab('requests-tab')" id="btn-requests-tab" class="tab-btn" style="padding: 0.6rem 1.2rem; font-weight: bold; background: none; border: none; color: var(--text-muted); cursor: pointer; border-radius: 4px; font-size: 1rem;">
+            <i class="fa-solid fa-hand-holding-heart"></i> Requested Items (Demands)
+        </button>
+    </div>
+
+    <div id="results-container" style="transition: opacity 0.2s;">
+        <!-- Tab Content 1: Offers -->
+        <div id="offers-tab" class="donation-tab-content">
+            <%- include('../partials/_donationGrid', { donations: offers, savedDonationIds: locals.savedDonationIds || [] }) %>
+        </div>
+        
+        <!-- Tab Content 2: Requests -->
+        <div id="requests-tab" class="donation-tab-content" style="display: none;">
+            <%- include('../partials/_donationGrid', { donations: requests, savedDonationIds: locals.savedDonationIds || [] }) %>
+        </div>
+    </div>
+
+    <script>
+        function switchDonationTab(tabId) {
+            // Hide all tab contents
+            document.querySelectorAll('.donation-tab-content').forEach(el => el.style.display = 'none');
+            // Show current tab content
+            document.getElementById(tabId).style.display = 'block';
+
+            // Update tab buttons style
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active-tab');
+                btn.style.color = 'var(--text-muted)';
+            });
+            
+            const activeBtn = document.getElementById('btn-' + tabId);
+            if (activeBtn) {
+                activeBtn.classList.add('active-tab');
+                activeBtn.style.color = 'var(--text)';
+            }
+            
+            // Save tab state in URL hash
+            window.location.hash = tabId;
+        }
+
+        // Handle initial load hash
+        document.addEventListener('DOMContentLoaded', () => {
+            const hash = window.location.hash;
+            if (hash === '#requests-tab') {
+                switchDonationTab('requests-tab');
+            } else {
+                switchDonationTab('offers-tab');
+            }
+        });
+    </script>
+
+    <style>
+        .active-tab {
+            border-bottom: 3px solid var(--primary) !important;
+            background: rgba(var(--primary-rgb), 0.05) !important;
+        }
+        .tab-btn:hover {
+            color: var(--primary) !important;
+        }
+    </style>
+
+    <%- include('../partials/footer') %>

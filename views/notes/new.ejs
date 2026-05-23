@@ -1,0 +1,326 @@
+<%- include('../partials/header') %>
+
+<div class="glass-card" style="max-width: 650px; margin: 3rem auto; padding: 2.5rem; border: 2px solid var(--primary);">
+    <h2 style="margin-bottom: 0.5rem; font-size: 2rem; font-weight: 800; text-transform: uppercase; letter-spacing: -0.5px; border-bottom: 2px solid var(--primary); padding-bottom: 0.5rem;"><i class="fa-solid fa-cloud-arrow-up"></i> Share Study Notes</h2>
+    <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 2rem;">Contribute course files or reference links to help your campus peers.</p>
+    
+    <form action="/notes" method="POST" enctype="multipart/form-data" id="upload-notes-form">
+        <!-- Title -->
+        <div style="margin-bottom: 1.2rem;">
+            <label style="font-weight: 600; display: block; margin-bottom: 0.4rem;">Title</label>
+            <input type="text" name="title" required style="width: 100%; padding: 0.6rem;" placeholder="E.g., Algorithms Analysis - Midterm Questions Solution">
+        </div>
+
+        <!-- Department -->
+        <div style="margin-bottom: 1.2rem;">
+            <label style="font-weight: 600; display: block; margin-bottom: 0.4rem;">Department / Branch</label>
+            <select name="department_id" id="department_id" required style="width: 100%; padding: 0.6rem; background: var(--bg); color: var(--text); border: 1px solid var(--border);">
+                <option value="">-- Select Department --</option>
+                <% departments.forEach(dept => { %>
+                    <option value="<%= dept.id %>"><%= dept.name %></option>
+                <% }) %>
+            </select>
+            <!-- Hidden field for compatibility with older tables if needed -->
+            <input type="hidden" name="branch" id="branch_hidden">
+        </div>
+
+        <!-- Row: Year & Semester -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.2rem;">
+            <div>
+                <label style="font-weight: 600; display: block; margin-bottom: 0.4rem;">Academic Year</label>
+                <select name="year" id="year" required disabled style="width: 100%; padding: 0.6rem; background: var(--bg); color: var(--text); border: 1px solid var(--border);">
+                    <option value="">-- Select Year --</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-weight: 600; display: block; margin-bottom: 0.4rem;">Semester</label>
+                <select name="semester" id="semester" required disabled style="width: 100%; padding: 0.6rem; background: var(--bg); color: var(--text); border: 1px solid var(--border);">
+                    <option value="">-- Select Semester --</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Subject -->
+        <div style="margin-bottom: 1.2rem;">
+            <label style="font-weight: 600; display: block; margin-bottom: 0.4rem;">Subject</label>
+            <select name="subject_id" id="subject_id" required disabled style="width: 100%; padding: 0.6rem; background: var(--bg); color: var(--text); border: 1px solid var(--border);">
+                <option value="">-- Select Subject --</option>
+            </select>
+            <% if (locals.user && locals.user.role === 'admin') { %>
+                <small style="display: block; margin-top: 0.3rem; color: var(--text-muted);">
+                    Don't see the subject? <a href="/admin/notes#subjects-tab" style="color: var(--primary); text-decoration: underline; font-weight: bold;">Create it in the Admin Panel</a>
+                </small>
+            <% } else { %>
+                <small style="display: block; margin-top: 0.3rem; color: var(--text-muted);">
+                    If a subject is missing, please contact the Admin to configure it.
+                </small>
+            <% } %>
+        </div>
+
+        <!-- Existing Notes for the selected Subject -->
+        <div id="existing-notes-container" style="display: none; margin-bottom: 1.5rem; background: var(--surface); border: 2px solid var(--primary); padding: 1.5rem; border-radius: 8px;">
+            <h3 style="margin-bottom: 1rem; font-size: 1.1rem; text-transform: uppercase; color: var(--primary); font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-file-invoice"></i> Already Uploaded Notes for this Subject
+            </h3>
+            <div id="existing-notes-list" style="max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.8rem;">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+
+        <!-- Description -->
+        <div style="margin-bottom: 1.5rem;">
+            <label style="font-weight: 600; display: block; margin-bottom: 0.4rem;">Description (Optional)</label>
+            <textarea name="description" style="width: 100%; padding: 0.6rem;" rows="3" placeholder="Briefly describe what chapters or concepts this note covers..."></textarea>
+        </div>
+
+        <!-- Sharing Type: File or Link Toggle -->
+        <div style="margin-bottom: 1.5rem; background: var(--surface); padding: 1.2rem; border-radius: 6px; border: 1px solid var(--border);">
+            <label style="font-weight: 600; display: block; margin-bottom: 0.8rem;"><i class="fa-solid fa-share-nodes"></i> How would you like to share?</label>
+            
+            <div style="display: flex; gap: 2rem; margin-bottom: 1.2rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 600;">
+                    <input type="radio" name="note_type" value="file" checked onclick="toggleShareType('file')" style="cursor: pointer;">
+                    <i class="fa-solid fa-file-pdf"></i> Upload File (PDF, Word, PPT)
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 600;">
+                    <input type="radio" name="note_type" value="link" onclick="toggleShareType('link')" style="cursor: pointer;">
+                    <i class="fa-solid fa-link"></i> Share URL Link
+                </label>
+            </div>
+
+            <!-- File Upload Block -->
+            <div id="file-upload-block">
+                <label style="font-weight: 600; display: block; margin-bottom: 0.4rem; font-size: 0.9rem;">Attach File</label>
+                <input type="file" name="file" id="file-input" style="width: 100%; padding: 0.4rem 0;" accept=".pdf,.doc,.docx,.ppt,.pptx,.zip,.txt,.png,.jpg,.jpeg">
+                <small style="color: var(--text-muted); display: block; margin-top: 0.3rem;">Supports PDF, Word, PPT, TXT, Images. Max 10MB.</small>
+            </div>
+
+            <!-- URL Link Block -->
+            <div id="link-upload-block" style="display: none;">
+                <label style="font-weight: 600; display: block; margin-bottom: 0.4rem; font-size: 0.9rem;">Paste URL Link</label>
+                <input type="url" name="link_url" id="link-input" style="width: 100%; padding: 0.6rem;" placeholder="E.g., https://drive.google.com/file/d/.../view">
+                <small style="color: var(--text-muted); display: block; margin-top: 0.3rem;">Provide a public shareable link (Google Drive, OneDrive, Dropbox, etc.).</small>
+            </div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn btn-lg" style="width: 100%; padding: 0.8rem; font-weight: bold; text-transform: uppercase;">Upload & Share Notes</button>
+    </form>
+</div>
+
+<script>
+    const departments = <%- JSON.stringify(departments) %>;
+    
+    const deptSelect = document.getElementById('department_id');
+    const branchHidden = document.getElementById('branch_hidden');
+    const yearSelect = document.getElementById('year');
+    const semSelect = document.getElementById('semester');
+    const fileInput = document.getElementById('file-input');
+    const linkInput = document.getElementById('link-input');
+
+    // Handle Department changes
+    deptSelect.addEventListener('change', () => {
+        const selectedId = parseInt(deptSelect.value, 10);
+        if (!selectedId) {
+            resetDropdown(yearSelect, '-- Select Year --');
+            resetDropdown(semSelect, '-- Select Semester --');
+            resetDropdown(document.getElementById('subject_id'), '-- Select Subject --');
+            return;
+        }
+
+        const dept = departments.find(d => d.id === selectedId);
+        if (dept) {
+            // Set hidden branch input for compatibility
+            branchHidden.value = dept.name;
+
+            // Populate Years
+            yearSelect.innerHTML = '<option value="">-- Select Year --</option>';
+            for (let y = 1; y <= dept.years; y++) {
+                yearSelect.innerHTML += `<option value="${y}">${y}${y === 1 ? 'st' : y === 2 ? 'nd' : y === 3 ? 'rd' : 'th'} Year</option>`;
+            }
+            yearSelect.disabled = false;
+            
+            // Reset Semesters and Subjects
+            resetDropdown(semSelect, '-- Select Semester --');
+            resetDropdown(document.getElementById('subject_id'), '-- Select Subject --');
+        }
+    });
+
+    // Handle Year changes
+    yearSelect.addEventListener('change', () => {
+        const year = parseInt(yearSelect.value, 10);
+        if (!year) {
+            resetDropdown(semSelect, '-- Select Semester --');
+            resetDropdown(document.getElementById('subject_id'), '-- Select Subject --');
+            return;
+        }
+
+        // Populate Semesters (2 per year)
+        semSelect.innerHTML = '<option value="">-- Select Semester --</option>';
+        const sem1 = (year * 2) - 1;
+        const sem2 = year * 2;
+        semSelect.innerHTML += `<option value="${sem1}">Semester ${sem1}</option>`;
+        semSelect.innerHTML += `<option value="${sem2}">Semester ${sem2}</option>`;
+        semSelect.disabled = false;
+        resetDropdown(document.getElementById('subject_id'), '-- Select Subject --');
+    });
+
+    // Handle Semester changes to fetch subjects
+    semSelect.addEventListener('change', async () => {
+        const deptId = deptSelect.value;
+        const semester = semSelect.value;
+        const subjectSelect = document.getElementById('subject_id');
+
+        if (!deptId || !semester) {
+            resetDropdown(subjectSelect, '-- Select Subject --');
+            return;
+        }
+
+        try {
+            subjectSelect.innerHTML = '<option value="">Loading subjects...</option>';
+            subjectSelect.disabled = true;
+
+            const response = await fetch(`/notes/api/subjects?department_id=${deptId}&semester=${semester}`);
+            if (!response.ok) throw new Error('Failed to fetch subjects');
+            
+            const subjects = await response.json();
+            
+            subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+            if (subjects.length === 0) {
+                subjectSelect.innerHTML += '<option value="" disabled>No subjects found for this semester</option>';
+            } else {
+                subjects.forEach(sub => {
+                    subjectSelect.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;
+                });
+                subjectSelect.disabled = false;
+            }
+        } catch (err) {
+            console.error('Error fetching subjects:', err);
+            subjectSelect.innerHTML = '<option value="">Error loading subjects</option>';
+        }
+    });
+
+    function resetDropdown(selectElement, defaultText) {
+        selectElement.innerHTML = `<option value="">${defaultText}</option>`;
+        selectElement.disabled = true;
+        if (selectElement.id === 'subject_id') {
+            document.getElementById('existing-notes-container').style.display = 'none';
+            document.getElementById('existing-notes-list').innerHTML = '';
+        }
+    }
+
+    const subjectSelect = document.getElementById('subject_id');
+    const existingNotesContainer = document.getElementById('existing-notes-container');
+    const existingNotesList = document.getElementById('existing-notes-list');
+
+    subjectSelect.addEventListener('change', async () => {
+        const subjectId = subjectSelect.value;
+        if (!subjectId) {
+            existingNotesContainer.style.display = 'none';
+            existingNotesList.innerHTML = '';
+            return;
+        }
+
+        try {
+            existingNotesList.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem;">Loading existing notes...</p>';
+            existingNotesContainer.style.display = 'block';
+
+            const response = await fetch(`/notes/api/notes?subject_id=${subjectId}`);
+            if (!response.ok) throw new Error('Failed to fetch notes');
+
+            const notes = await response.json();
+            existingNotesList.innerHTML = '';
+
+            if (notes.length === 0) {
+                existingNotesList.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem; font-style: italic;">No notes uploaded yet for this subject. Be the first to share!</p>';
+            } else {
+                notes.forEach(note => {
+                    const dateStr = new Date(note.created_at).toLocaleDateString();
+                    const typeIcon = note.note_type === 'link' ? 'fa-solid fa-link' : 'fa-solid fa-file-pdf';
+                    const typeLabel = note.note_type === 'link' ? 'Link' : 'File';
+                    
+                    const statusBadgeColor = note.is_approved === 1 ? 'background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid #22c55e;' : 'background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid #f59e0b;';
+                    const statusLabel = note.is_approved === 1 ? 'Approved' : 'Pending Approval';
+
+                    const noteDiv = document.createElement('div');
+                    noteDiv.style = 'padding: 0.8rem 1.2rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; border: 1px solid var(--border); background: var(--bg); border-radius: 6px;';
+                    noteDiv.innerHTML = `
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem; flex-wrap: wrap;">
+                                <strong style="font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px; display: inline-block; color: var(--text);">${note.title}</strong>
+                                <span class="badge" style="font-size: 0.75rem; background: var(--surface); color: var(--text); border: 1px solid var(--border); text-transform: uppercase;">
+                                    <i class="${typeIcon}"></i> ${typeLabel}
+                                </span>
+                                <span class="badge" style="font-size: 0.75rem; ${statusBadgeColor}">
+                                    ${statusLabel}
+                                </span>
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">
+                                Uploaded by @${note.username || 'Student'} on ${dateStr}
+                            </div>
+                        </div>
+                        <div>
+                            <a href="${note.file_url}" target="_blank" class="btn" style="padding: 0.35rem 0.7rem; font-size: 0.8rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.3rem; text-decoration: none;">
+                                <i class="fa-solid fa-eye"></i> View
+                            </a>
+                        </div>
+                    `;
+                    existingNotesList.appendChild(noteDiv);
+                });
+            }
+        } catch (err) {
+            console.error('Error fetching notes:', err);
+            existingNotesList.innerHTML = '<p style="color: var(--danger); font-size: 0.9rem;">Error loading notes for this subject.</p>';
+        }
+    });
+
+    // Toggle File/Link inputs
+    function toggleShareType(type) {
+        const fileBlock = document.getElementById('file-upload-block');
+        const linkBlock = document.getElementById('link-upload-block');
+
+        if (type === 'link') {
+            fileBlock.style.display = 'none';
+            linkBlock.style.display = 'block';
+            fileInput.required = false;
+            linkInput.required = true;
+        } else {
+            fileBlock.style.display = 'block';
+            linkBlock.style.display = 'none';
+            fileInput.required = true;
+            linkInput.required = false;
+        }
+    }
+
+    // Initialize required attributes
+    fileInput.required = true;
+
+    // Check if query params are available to pre-select
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const qDept = urlParams.get('department');
+        const qYear = urlParams.get('year');
+        const qSem = urlParams.get('semester');
+
+        if (qDept) {
+            deptSelect.value = qDept;
+            deptSelect.dispatchEvent(new Event('change'));
+
+            if (qYear) {
+                setTimeout(() => {
+                    yearSelect.value = qYear;
+                    yearSelect.dispatchEvent(new Event('change'));
+
+                    if (qSem) {
+                        setTimeout(() => {
+                            semSelect.value = qSem;
+                            semSelect.dispatchEvent(new Event('change'));
+                        }, 100);
+                    }
+                }, 100);
+            }
+        }
+    });
+</script>
+
+<%- include('../partials/footer') %>

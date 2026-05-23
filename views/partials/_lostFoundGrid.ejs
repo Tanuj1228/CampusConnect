@@ -1,0 +1,102 @@
+<div class="grid">
+    <% if (items.length === 0) { %>
+        <div style="grid-column: 1 / -1; padding: 4rem 2rem; border: 2px dashed var(--primary); text-align: center; margin-top: 2rem;">
+            <i class="fa-solid fa-ghost" style="font-size: 4rem; color: var(--primary); margin-bottom: 1rem; opacity: 0.3;"></i>
+            <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">It's awfully quiet here...</h3>
+            <p style="color: var(--text-muted);">No items have been reported yet.</p>
+        </div>
+    <% } %>
+    <% items.forEach(item => { %>
+        <div style="background: var(--bg); overflow: hidden; border: 2px solid var(--primary); box-shadow: 6px 6px 0px var(--primary); display: flex; flex-direction: column; transition: transform 0.2s;">
+            <% if (item.image_url) { %>
+                <div style="height: 220px; background-image: url('<%= item.image_url %>'); background-size: contain; background-repeat: no-repeat; background-position: center; background-color: var(--surface); border-bottom: 2px solid var(--primary);"></div>
+            <% } else { %>
+                <div style="height: 220px; background: #fafafa; border-bottom: 2px solid var(--primary); display: flex; align-items: center; justify-content: center; color: var(--text-muted); flex-direction: column;">
+                    <i class="fa-regular fa-image" style="font-size: 3rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                    <span style="font-size: 0.9rem; font-weight: 600; text-transform: uppercase;">No Image Data</span>
+                </div>
+            <% } %>
+
+            <div style="padding: 1.5rem; flex: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                    <h3 style="font-size: 1.4rem; font-weight: 700; max-width: 70%; line-height: 1.2;">
+                        <%= item.title %>
+                    </h3>
+                    <span style="padding: 0.3rem 0.6rem; border: 2px solid var(--primary); font-weight: 800; font-size: 0.8rem; background: <%= item.type === 'lost' ? 'var(--primary)' : 'var(--bg)' %>; color: <%= item.type === 'lost' ? 'var(--bg)' : 'var(--primary)' %>; text-transform: uppercase;">
+                        <%= item.type %>
+                    </span>
+                </div>
+
+                <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; display: flex; align-items: center; font-weight: 600;">
+                    <i class="fa-solid fa-location-dot" style="margin-right: 0.5rem; color: var(--primary);"></i>
+                    <%= item.location ? item.location : 'Location Not Specified' %>
+                </p>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                    <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">
+                        <i class="fa-regular fa-calendar" style="margin-right: 0.3rem;"></i>
+                        <%= new Date(item.created_at).toLocaleDateString() %>
+                    </div>
+                    <span style="font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <% if (item.status === 'Open') { %>
+                            <span style="color: #ca8a04;">🟡 Open</span>
+                        <% } else if (item.status === 'Claimed') { %>
+                            <span style="color: #2563eb;">🔵 Claimed</span>
+                        <% } else if (item.status === 'Resolved') { %>
+                            <span style="color: #16a34a;">🟢 Resolved</span>
+                        <% } %>
+                    </span>
+                </div>
+            </div>
+
+            <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+                <div style="padding: 1rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.8rem; background: var(--surface);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <a href="/lost-found/<%= item.id %>" target="_blank" style="font-size: 0.9rem; color: var(--text); font-weight: 600;"><i class="fa-solid fa-eye"></i> View Original</a>
+                        
+                        <% if (item.is_approved === 0) { %>
+                            <span style="background: rgba(245,158,11,0.2); color: #ca8a04; border: 1px solid #f59e0b; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">Pending Approval</span>
+                        <% } else { %>
+                            <span style="background: rgba(22,163,74,0.2); color: #16a34a; border: 1px solid #16a34a; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">Live / Approved</span>
+                        <% } %>
+                    </div>
+
+                    <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                        <% if (item.is_approved === 0) { %>
+                            <form action="/admin/lost-found/<%= item.id %>/approve" method="POST" style="margin: 0;">
+                                <button type="submit" class="btn" style="background: #16a34a; color: white; padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: bold;">Approve</button>
+                            </form>
+                        <% } %>
+                        <form action="/admin/lost-found/<%= item.id %>/delete" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to completely delete this item?');">
+                            <button type="submit" class="btn" style="background: #ef4444; color: white; padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: bold;">Delete</button>
+                        </form>
+                    </div>
+
+                    <% if (item.is_approved === 1) { %>
+                        <div style="border-top: 1px solid var(--border); padding-top: 0.8rem; margin-top: 0.2rem;">
+                            <form action="/lost-found/<%= item.id %>/status" method="POST" style="display: flex; gap: 0.5rem; align-items: center; margin: 0;">
+                                <select name="status" style="padding: 0.35rem; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--text); font-size: 0.85rem; flex: 1;">
+                                    <option value="Open" <%= item.status === 'Open' ? 'selected' : '' %>>Open</option>
+                                    <option value="Claimed" <%= item.status === 'Claimed' ? 'selected' : '' %>>Claimed</option>
+                                    <option value="Resolved" <%= item.status === 'Resolved' ? 'selected' : '' %>>Resolved</option>
+                                </select>
+                                <button class="btn btn-update" type="submit" style="padding: 0.35rem 0.7rem; font-size: 0.85rem; font-weight: bold;">Update</button>
+                            </form>
+                        </div>
+                    <% } %>
+                </div>
+            <% } else { %>
+                <div style="display: flex; flex-direction: column;">
+                    <a href="/lost-found/<%= item.id %>" class="btn" style="display: block; text-align: center; border-radius: 0; border: none; border-top: 2px solid var(--primary); padding: 1.2rem; font-size: 1.1rem;">
+                        View Details <i class="fa-solid fa-arrow-right" style="margin-left: 0.5rem;"></i>
+                    </a>
+                    <% if (user && user.id !== item.user_id) { %>
+                        <div style="display: flex; border-top: 1px solid var(--border);">
+                            <button type="button" onclick="openReportModal('LostFound', <%= item.id %>)" class="btn btn-outline" style="flex: 1; border-radius: 0; border: none; padding: 0.8rem; color: #ef4444;" title="Report Spam"><i class="fa-solid fa-flag"></i> Report</button>
+                        </div>
+                    <% } %>
+                </div>
+            <% } %>
+        </div>
+    <% }) %>
+</div>

@@ -1,0 +1,122 @@
+<%- include('../partials/header') %>
+
+    <div class="glass-card" style="max-width: 600px; margin: 2rem auto;">
+        <h2 style="margin-bottom: 1.5rem;" id="form-title">Donate an Item</h2>
+
+        <% if (locals.error) { %>
+            <div style="background: rgba(239, 68, 68, 0.1); border: 2px solid #ef4444; color: #ef4444; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-weight: bold;">
+                <i class="fa-solid fa-triangle-exclamation"></i> <%= error %>
+            </div>
+        <% } %>
+
+        <form action="/donations" method="POST" enctype="multipart/form-data">
+            <div>
+                <label>Post Type</label>
+                <select name="donation_type" id="donation_type" style="width: 100%; margin-top: 0.5rem;" onchange="toggleFormType()">
+                    <option value="offer" <%= (locals.item && item.donation_type === 'offer') ? 'selected' : '' %>>Offer: I want to Donate an Item</option>
+                    <option value="request" <%= (locals.item && item.donation_type === 'request') ? 'selected' : '' %>>Request: I need / Request an Item</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Item Name / Title</label>
+                <input type="text" name="title" required style="width: 100%; margin-top: 0.5rem;"
+                    placeholder="E.g., Engineering Mathematics 1st Year Book" value="<%= locals.item && item.title ? item.title : '' %>">
+            </div>
+
+            <div>
+                <label>Description & Condition</label>
+                <textarea name="description" required style="width: 100%; margin-top: 0.5rem;" rows="4"
+                    placeholder="Describe the item, its condition, etc."><%= locals.item && item.description ? item.description : '' %></textarea>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Contact Method</label>
+                <div style="display: flex; gap: 1.5rem; margin-top: 0.5rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 500; cursor: pointer;">
+                        <input type="radio" name="contact_method" id="method_email" value="email" checked onchange="switchContactMethod('email')">
+                        Email Address
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 500; cursor: pointer;">
+                        <input type="radio" name="contact_method" id="method_phone" value="phone" onchange="switchContactMethod('phone')">
+                        Contact Number
+                    </label>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label id="contact-label" style="display: block; font-weight: 600;">Email Address</label>
+                <input type="email" name="contact_info" id="contact_info" required style="width: 100%; margin-top: 0.5rem;"
+                    placeholder="Enter email address" value="<%= (locals.item && item.contact_info) ? item.contact_info : user.email %>">
+            </div>
+
+            <div id="image-upload-block">
+                <label>Upload Image (Optional but recommended)</label>
+                <input type="file" name="image" accept="image/*" style="width: 100%; margin-top: 0.5rem;">
+            </div>
+
+            <button type="submit" class="btn" id="submit-btn" style="margin-top: 1rem;">List for Donation</button>
+        </form>
+    </div>
+
+    <script>
+        function toggleFormType() {
+            const type = document.getElementById('donation_type').value;
+            const imageBlock = document.getElementById('image-upload-block');
+            const formTitle = document.getElementById('form-title');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (type === 'request') {
+                imageBlock.style.display = 'none';
+                formTitle.innerText = "Request / Demand an Item";
+                submitBtn.innerText = "Post Request";
+            } else {
+                imageBlock.style.display = 'block';
+                formTitle.innerText = "Donate an Item";
+                submitBtn.innerText = "List for Donation";
+            }
+        }
+
+        function switchContactMethod(method) {
+            const label = document.getElementById('contact-label');
+            const input = document.getElementById('contact_info');
+            if (method === 'email') {
+                label.innerText = 'Email Address';
+                input.type = 'email';
+                input.placeholder = 'Enter email address';
+                input.value = '<%= user.email %>';
+                input.removeAttribute('pattern');
+                input.removeAttribute('maxlength');
+                input.removeAttribute('oninput');
+            } else {
+                label.innerText = 'Contact Number (Exactly 10 digits)';
+                input.type = 'text';
+                input.placeholder = 'E.g., 9876543210';
+                input.value = '';
+                input.setAttribute('pattern', '\\d{10}');
+                input.setAttribute('maxlength', '10');
+                input.setAttribute('oninput', "this.value = this.value.replace(/[^0-9]/g, '')");
+            }
+        }
+
+        // Run toggleFormType on load to ensure state correctness
+        document.addEventListener('DOMContentLoaded', () => {
+            toggleFormType();
+            
+            // Check if initial contact value is phone (digits-only) to set radio state
+            const initialContact = document.getElementById('contact_info').value;
+            if (/^\d+$/.test(initialContact.trim()) && initialContact.trim() !== '') {
+                document.getElementById('method_phone').checked = true;
+                switchContactMethod('phone');
+                document.getElementById('contact_info').value = initialContact;
+            } else {
+                document.getElementById('method_email').checked = true;
+                switchContactMethod('email');
+                if (initialContact.trim() !== '') {
+                    document.getElementById('contact_info').value = initialContact;
+                }
+            }
+        });
+    </script>
+
+<%- include('../partials/footer') %>

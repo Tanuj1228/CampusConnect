@@ -1,0 +1,164 @@
+<%- include('partials/header') %>
+
+<div class="glass-card" style="max-width: 400px; margin: 4rem auto;">
+    <h2 style="text-align: center; margin-bottom: 2rem;">Welcome Back</h2>
+    
+    <% if (typeof error !== 'undefined' && error) { %>
+        <div style="background: rgba(239, 68, 68, 0.2); color: var(--danger); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+            <%= error %>
+        </div>
+    <% } %>
+
+    <form action="/login" method="POST">
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" required placeholder="you@college.edu">
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required placeholder="••••••••">
+        </div>
+        
+        <button type="submit" class="btn" style="margin-top: 1.5rem; width: 100%;">Login</button>
+    </form>
+    
+    <div style="text-align: center; margin: 1.5rem 0; color: var(--text-muted); position: relative;">
+        <span style="background: var(--surface); padding: 0 10px; position: relative; z-index: 1;">Or</span>
+        <hr style="position: absolute; top: 50%; left: 0; right: 0; border: none; border-top: 1px solid var(--border); margin: 0; z-index: 0;">
+    </div>
+    
+    <div id="firebase-alert" style="display: none; background: rgba(239, 68, 68, 0.2); color: var(--danger); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;"></div>
+    
+    <button type="button" id="google-login-btn" class="btn btn-outline" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; border: 1px solid var(--border); background: transparent; cursor: pointer; padding: 0.75rem; border-radius: 8px; font-weight: 600; font-size: 0.95rem; color: var(--text);">
+        <svg width="18" height="18" viewBox="0 0 18 18" style="margin-right: 8px;"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/><path d="M3.964 10.706A5.414 5.414 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.995 8.995 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.579c1.32 0 2.507.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.963L3.964 7.294C4.672 5.166 6.656 3.579 9 3.579z" fill="#EA4335"/></svg>
+        Sign in with Google
+    </button>
+    
+    <p style="text-align: center; margin-top: 1.5rem; color: var(--text-muted);">
+        Don't have an account? <a href="/register" style="color: var(--primary);">Register</a>
+    </p>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    const config = <%- JSON.stringify(firebaseConfig) %>;
+    const alertEl = document.getElementById('firebase-alert');
+    const googleBtn = document.getElementById('google-login-btn');
+
+    function showAlert(msg) {
+        alertEl.textContent = msg;
+        alertEl.style.display = 'block';
+    }
+
+    const googleIcon = `<svg width="18" height="18" viewBox="0 0 18 18" style="margin-right: 8px;"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/><path d="M3.964 10.706A5.414 5.414 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.995 8.995 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.579c1.32 0 2.507.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.963L3.964 7.294C4.672 5.166 6.656 3.579 9 3.579z" fill="#EA4335"/></svg>`;
+
+    if (!config || !config.apiKey || !config.projectId) {
+        googleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showAlert('Google Sign-In is not configured. Please add the Firebase credentials (FIREBASE_API_KEY, FIREBASE_PROJECT_ID, etc.) to your server .env file.');
+        });
+    } else {
+        try {
+            const app = initializeApp(config);
+            const auth = getAuth(app);
+            const provider = new GoogleAuthProvider();
+
+            // Process redirect result if page was redirected
+            getRedirectResult(auth)
+                .then(async (result) => {
+                    if (result && result.user) {
+                        alertEl.style.display = 'none';
+                        googleBtn.disabled = true;
+                        googleBtn.innerHTML = 'Connecting...';
+                        
+                        try {
+                            const idToken = await result.user.getIdToken();
+                            const response = await fetch('/auth/firebase-login', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ idToken })
+                            });
+                            
+                            const data = await response.json();
+                            if (data.success) {
+                                window.location.href = data.redirect;
+                            } else {
+                                showAlert(data.error || 'Server login failed.');
+                                googleBtn.disabled = false;
+                                googleBtn.innerHTML = `${googleIcon} Sign in with Google`;
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            showAlert('Failed to process Google sign-in details on server.');
+                            googleBtn.disabled = false;
+                            googleBtn.innerHTML = `${googleIcon} Sign in with Google`;
+                        }
+                    }
+                })
+                .catch((redirectErr) => {
+                    console.error('Redirect authentication error:', redirectErr);
+                    showAlert(redirectErr.message || 'Firebase redirect authentication failed.');
+                });
+
+            let isSigningIn = false;
+            googleBtn.addEventListener('click', async () => {
+                if (isSigningIn) return;
+                isSigningIn = true;
+                alertEl.style.display = 'none';
+                googleBtn.disabled = true;
+                googleBtn.innerHTML = 'Connecting...';
+                
+                try {
+                    const result = await signInWithPopup(auth, provider);
+                    const idToken = await result.user.getIdToken();
+                    
+                    const response = await fetch('/auth/firebase-login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ idToken })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        window.location.href = data.redirect;
+                    } else {
+                        showAlert(data.error || 'Server login failed.');
+                        googleBtn.disabled = false;
+                        googleBtn.innerHTML = `${googleIcon} Sign in with Google`;
+                    }
+                } catch (authError) {
+                    console.error(authError);
+                    if (authError.code === 'auth/popup-closed-by-user' || authError.code === 'auth/cancelled-popup-request') {
+                        showAlert('Login popup closed. Redirecting to Google Login instead...');
+                        setTimeout(() => {
+                            signInWithRedirect(auth, provider);
+                        }, 1500);
+                    } else if (authError.code === 'auth/popup-blocked') {
+                        showAlert('Popup was blocked by your browser. Redirecting to Google Login...');
+                        setTimeout(() => {
+                            signInWithRedirect(auth, provider);
+                        }, 1500);
+                    } else {
+                        showAlert(authError.message || 'Firebase popup authentication failed.');
+                        googleBtn.disabled = false;
+                        googleBtn.innerHTML = `${googleIcon} Sign in with Google`;
+                    }
+                } finally {
+                    isSigningIn = false;
+                }
+            });
+        } catch (initErr) {
+            console.error(initErr);
+            showAlert('Failed to initialize Firebase SDK client.');
+        }
+    }
+</script>
+
+<%- include('partials/footer') %>

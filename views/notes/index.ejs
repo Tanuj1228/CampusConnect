@@ -1,0 +1,274 @@
+<% 
+    let uploadUrl = '/notes/new';
+    if (locals.selectedDept) uploadUrl += '?department=' + selectedDept.id;
+    if (locals.selectedYear) uploadUrl += '&year=' + selectedYear;
+    if (locals.selectedSemester) uploadUrl += '&semester=' + selectedSemester;
+%>
+<%- include('../partials/header') %>
+
+<div style="max-width: 1200px; margin: 2rem auto; padding: 0 1rem;">
+    <!-- Breadcrumb Navigation -->
+    <div style="margin-bottom: 2rem; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+        <a href="/notes" style="color: var(--primary); text-decoration: none; font-weight: bold;"><i class="fa-solid fa-book"></i> Study Notes</a>
+        <% if (locals.selectedDept) { %>
+            <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; color: var(--text-muted);"></i>
+            <a href="/notes?department=<%= selectedDept.id %>" style="color: var(--primary); text-decoration: none; font-weight: bold;"><%= selectedDept.name %></a>
+        <% } %>
+        <% if (locals.selectedYear) { %>
+            <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; color: var(--text-muted);"></i>
+            <a href="/notes?department=<%= selectedDept.id %>&year=<%= selectedYear %>" style="color: var(--primary); text-decoration: none; font-weight: bold;"><%= selectedYear %> Year</a>
+        <% } %>
+        <% if (locals.selectedSemester) { %>
+            <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; color: var(--text-muted);"></i>
+            <span style="color: var(--text-muted); font-weight: bold;">Semester <%= selectedSemester %></span>
+        <% } %>
+    </div>
+
+    <!-- Main Header -->
+    <div style="border-bottom: 3px solid var(--primary); padding-bottom: 1.5rem; margin-bottom: 3rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <% if (locals.selectedSemester) { %>
+                <h1 style="font-size: 3rem; font-weight: 800; letter-spacing: -2px; text-transform: uppercase; margin: 0;"><%= selectedDept.name %> - Sem <%= selectedSemester %></h1>
+                <p style="color: var(--text-muted); font-size: 1.1rem; margin-top: 0.5rem;">Browse and download notes grouped by subject for Year <%= selectedYear %>, Semester <%= selectedSemester %>.</p>
+            <% } else if (locals.selectedYear) { %>
+                <h1 style="font-size: 3rem; font-weight: 800; letter-spacing: -2px; text-transform: uppercase; margin: 0;"><%= selectedDept.name %> - <%= selectedYear === 1 ? '1st' : selectedYear === 2 ? '2nd' : selectedYear === 3 ? '3rd' : selectedYear + 'th' %> Year</h1>
+                <p style="color: var(--text-muted); font-size: 1.1rem; margin-top: 0.5rem;">Select your semester to access study notes.</p>
+            <% } else if (locals.selectedDept) { %>
+                <h1 style="font-size: 3rem; font-weight: 800; letter-spacing: -2px; text-transform: uppercase; margin: 0;"><%= selectedDept.name %></h1>
+                <p style="color: var(--text-muted); font-size: 1.1rem; margin-top: 0.5rem;">Select your academic year to browse study materials.</p>
+            <% } else { %>
+                <h1 style="font-size: 3.5rem; font-weight: 800; letter-spacing: -2px; text-transform: uppercase; margin: 0;">Study Notes</h1>
+                <p style="color: var(--text-muted); font-size: 1.1rem; margin-top: 0.5rem;">Access and share course lectures, PDFs, PPTs, and reference links.</p>
+            <% } %>
+        </div>
+        
+        <!-- Upload Notes Action -->
+        <% if (locals.user) { %>
+            <a href="<%= uploadUrl %>" class="btn btn-lg" style="box-shadow: 4px 4px 0px #000; transform: translateY(-4px); border-radius: 0; border: 2px solid #000; display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+                <i class="fa-solid fa-plus"></i> Share / Upload Notes
+            </a>
+        <% } %>
+    </div>
+
+    <!-- Category Browser Layout -->
+    <% if (!locals.selectedDept) { %>
+        <!-- STEP A: Browse Departments -->
+        <h3 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: -0.5px;">Choose Department</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 4rem;">
+            <% if (locals.departments) { %>
+                <% departments.forEach(dept => { %>
+                    <a href="/notes?department=<%= dept.id %>" style="text-decoration: none;" class="dept-card-link">
+                        <div class="glass-card dept-card" style="padding: 2.5rem 2rem; border: 2px solid var(--primary); text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: all 0.2s;">
+                            <i class="fa-solid fa-graduation-cap" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                            <h2 style="font-size: 1.8rem; font-weight: 800; color: var(--text); margin-bottom: 0.5rem;"><%= dept.name %></h2>
+                            <span class="badge" style="background: var(--surface); border: 1px solid var(--primary);"><%= dept.years %> Years Program</span>
+                        </div>
+                    </a>
+                <% }) %>
+            <% } %>
+        </div>
+
+
+        <!-- Recent Uploads Section -->
+        <div>
+            <h3 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: -0.5px;">Recent Uploads</h3>
+            <div id="results-container">
+                <%- include('../partials/_noteGrid', { notes: locals.notes || [], savedNoteIds: locals.savedNoteIds || [] }) %>
+            </div>
+        </div>
+
+    <% } else if (!locals.selectedYear) { %>
+        <!-- STEP B: Browse Years within Department -->
+        <h3 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: -0.5px;">Choose Academic Year</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 4rem;">
+            <% for (let y = 1; y <= selectedDept.years; y++) { %>
+                <a href="/notes?department=<%= selectedDept.id %>&year=<%= y %>" style="text-decoration: none;">
+                    <div class="glass-card year-card" style="padding: 2.5rem 2rem; border: 2px solid var(--primary); text-align: center; transition: all 0.2s;">
+                        <i class="fa-solid fa-calendar-days" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                        <h2 style="font-size: 1.8rem; font-weight: 800; color: var(--text); margin-bottom: 0.5rem;">
+                            <%= y === 1 ? '1st' : y === 2 ? '2nd' : y === 3 ? '3rd' : y + 'th' %> Year
+                        </h2>
+                        <span class="badge" style="background: var(--surface);">Semesters <%= (y * 2) - 1 %> & <%= y * 2 %></span>
+                    </div>
+                </a>
+            <% } %>
+        </div>
+
+    <% } else if (!locals.selectedSemester) { %>
+        <!-- STEP C: Browse Semesters within Year -->
+        <h3 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: -0.5px;">Choose Semester</h3>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; max-width: 800px; margin: 0 auto 4rem auto;">
+            <% for (let s = (selectedYear * 2) - 1; s <= (selectedYear * 2); s++) { %>
+                <a href="/notes?department=<%= selectedDept.id %>&year=<%= selectedYear %>&semester=<%= s %>" style="text-decoration: none;">
+                    <div class="glass-card semester-card" style="padding: 3rem 2rem; border: 2px solid var(--primary); text-align: center; transition: all 0.2s;">
+                        <i class="fa-solid fa-book-open-reader" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                        <h2 style="font-size: 2.2rem; font-weight: 800; color: var(--text); margin-bottom: 0.5rem;">Semester <%= s %></h2>
+                        <span style="font-size: 1.1rem; color: var(--text-muted); font-weight: 600;">Browse notes & syllabus</span>
+                    </div>
+                </a>
+            <% } %>
+        </div>
+
+    <% } else { %>
+        <!-- STEP D: Browse Subjects in Semester -->
+        <h3 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: -0.5px;">Select Subject</h3>
+        
+        <!-- Subject Buttons Grid (3 columns layout by media query) -->
+        <div class="subject-buttons-grid" style="display: grid; gap: 1.2rem; margin-bottom: 3rem;">
+            <% if (locals.semesterSubjects && semesterSubjects.length > 0) { %>
+                <% semesterSubjects.forEach((sub, idx) => { %>
+                    <button class="subject-btn" 
+                            data-subject-id="<%= sub.id %>" 
+                            data-subject-name="<%= sub.name %>"
+                            onclick="selectSubject('<%= sub.id %>')"
+                            style="padding: 1.5rem; font-weight: bold; background: var(--surface); border: 2px solid var(--primary); text-align: center; cursor: pointer; border-radius: 4px; font-size: 1.1rem; transition: all 0.2s; color: var(--text);">
+                        <i class="fa-solid fa-book-bookmark" style="margin-bottom: 0.5rem; font-size: 1.5rem; display: block; color: var(--primary);"></i>
+                        <%= sub.name %>
+                    </button>
+                <% }) %>
+            <% } else { %>
+                <div style="color: var(--text-muted); grid-column: 1 / -1; text-align: center; padding: 3rem 2rem; border: 2px dashed var(--border); border-radius: 8px;">
+                    <i class="fa-solid fa-circle-exclamation" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem; opacity: 0.4;"></i>
+                    <h3 style="font-size: 1.3rem; margin-bottom: 0.5rem; color: var(--text);">No subjects configured yet</h3>
+                    <% if (locals.user && locals.user.role === 'admin') { %>
+                        <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">Configure subjects in the admin panel to let users share notes.</p>
+                        <a href="/admin/notes#subjects-tab" class="btn"><i class="fa-solid fa-plus"></i> Configure Subjects</a>
+                    <% } else { %>
+                        <p style="color: var(--text-muted); margin-bottom: 0; font-size: 0.95rem;">Please request the administrator to configure subjects for Semester <%= selectedSemester %>.</p>
+                    <% } %>
+                </div>
+            <% } %>
+        </div>
+
+
+
+        <!-- Subject Content Container -->
+        <% if (locals.semesterSubjects && semesterSubjects.length > 0) { %>
+            <% semesterSubjects.forEach((sub, idx) => { %>
+                <div id="subject-section-<%= sub.id %>" class="subject-section" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; border-bottom: 2px solid var(--border); padding-bottom: 0.8rem;">
+                        <h2 style="font-size: 1.8rem; font-weight: 800; color: var(--text); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                            <span><%= sub.name %></span>
+                            <span style="font-size: 0.95rem; font-weight: bold; background: rgba(var(--primary-rgb), 0.1); color: var(--primary); padding: 0.2rem 0.6rem; border-radius: 4px;" id="count-<%= sub.id %>">
+                                0 Notes
+                            </span>
+                        </h2>
+                        
+                        <!-- Add notes button inside this subject -->
+                        <% if (locals.user) { %>
+                            <a href="/notes/new?department=<%= selectedDept.id %>&year=<%= selectedYear %>&semester=<%= selectedSemester %>&subject_id=<%= sub.id %>" 
+                               class="btn" 
+                               style="box-shadow: 4px 4px 0px #000; border: 2px solid #000; border-radius: 0; padding: 0.5rem 1rem; font-size: 0.9rem; font-weight: bold; display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none;">
+                                <i class="fa-solid fa-plus-circle"></i> Add Notes in <%= sub.name %>
+                            </a>
+                        <% } %>
+                    </div>
+                    
+                    <div class="subject-notes-list">
+                        <% 
+                            // Filter notes for this specific subject id (or by name if legacy)
+                            const subNotes = notes.filter(n => n.subject_id === sub.id || (n.subject_id === null && n.subject === sub.name));
+                        %>
+                        <!-- Inline script to update count badge -->
+                        <script>
+                            document.addEventListener('DOMContentLoaded', () => {
+                                const badge = document.getElementById('count-<%= sub.id %>');
+                                if (badge) badge.innerText = '<%= subNotes.length %> Note<%= subNotes.length === 1 ? "" : "s" %>';
+                            });
+                        </script>
+
+                        <% if (subNotes.length === 0) { %>
+                            <div style="padding: 3rem 2rem; border: 2px dashed var(--border); text-align: center; border-radius: 8px;">
+                                <i class="fa-solid fa-folder-open" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem; opacity: 0.4;"></i>
+                                <h3 style="font-size: 1.3rem; margin-bottom: 0.5rem; color: var(--text);">No notes uploaded yet</h3>
+                                <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">Be the first one to share lecture files, PDFs, or external links for <%= sub.name %>!</p>
+                                <% if (locals.user) { %>
+                                    <a href="/notes/new?department=<%= selectedDept.id %>&year=<%= selectedYear %>&semester=<%= selectedSemester %>&subject_id=<%= sub.id %>" class="btn" style="font-size: 0.9rem;"><i class="fa-solid fa-plus"></i> Share Notes Now</a>
+                                <% } %>
+                            </div>
+                        <% } else { %>
+                            <%- include('../partials/_noteGrid', { notes: subNotes, savedNoteIds: locals.savedNoteIds || [] }) %>
+                        <% } %>
+                    </div>
+                </div>
+            <% }) %>
+        <% } %>
+
+        <script>
+            function selectSubject(subId) {
+
+                // Hide all subject sections
+                document.querySelectorAll('.subject-section').forEach(sec => sec.style.display = 'none');
+                
+                // Show selected subject section
+                const targetSec = document.getElementById('subject-section-' + subId);
+                if (targetSec) targetSec.style.display = 'block';
+
+                // Reset all subject buttons style
+                document.querySelectorAll('.subject-btn').forEach(btn => {
+                    btn.classList.remove('active-subject-btn');
+                    btn.style.boxShadow = 'none';
+                    btn.style.transform = 'none';
+                    btn.style.background = 'var(--surface)';
+                });
+
+                // Highlight active button
+                const activeBtn = document.querySelector(`[data-subject-id="${subId}"]`);
+                if (activeBtn) {
+                    activeBtn.classList.add('active-subject-btn');
+                    activeBtn.style.boxShadow = '4px 4px 0px var(--primary)';
+                    activeBtn.style.transform = 'translateY(-2px)';
+                    activeBtn.style.background = 'rgba(var(--primary-rgb), 0.02)';
+                }
+            }
+            
+            // Initialize tab parameters on load (no auto-selection of subjects)
+            document.addEventListener('DOMContentLoaded', () => {
+                // Do not auto-select first subject to hide notes by default
+            });
+        </script>
+
+        <style>
+            .subject-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 4px 4px 0px var(--primary) !important;
+                background: var(--bg-hover) !important;
+            }
+            .active-subject-btn {
+                box-shadow: 4px 4px 0px var(--primary) !important;
+                transform: translateY(-2px);
+                border-color: var(--primary) !important;
+            }
+            
+            /* Responsive layout: exactly 3 columns on desktop, 2 on tablet, 1 on mobile */
+            @media (min-width: 900px) {
+                .subject-buttons-grid {
+                    grid-template-columns: repeat(3, 1fr) !important;
+                }
+            }
+            @media (max-width: 899px) and (min-width: 600px) {
+                .subject-buttons-grid {
+                    grid-template-columns: repeat(2, 1fr) !important;
+                }
+            }
+            @media (max-width: 599px) {
+                .subject-buttons-grid {
+                    grid-template-columns: 1fr !important;
+                }
+            }
+        </style>
+    <% } %>
+</div>
+
+<style>
+    .dept-card:hover, .year-card:hover, .semester-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 8px 8px 0px var(--primary) !important;
+        background: var(--bg-hover) !important;
+    }
+    .dept-card-link {
+        display: block;
+    }
+</style>
+
+<%- include('../partials/footer') %>

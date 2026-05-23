@@ -1,0 +1,61 @@
+<%- include('partials/header') %>
+
+<section class="hero">
+    <h1>Campus Connect.</h1>
+    
+    <p class="hero-subtitle">
+        Your centralized hub to find lost belongings, share semester notes, and donate used materials. Simple, fast, and built for students.
+    </p>
+    
+    <div class="cta-group">
+        <a href="/lost-found/new" class="btn btn-lg">
+            Report Lost Item
+        </a>
+        <a href="/notes" class="btn-outline btn-lg" style="display: inline-flex; align-items: center; text-decoration: none;">
+            Explore Notes
+        </a>
+        <% if (!locals.user) { %>
+        <a href="/register" class="btn btn-lg" style="display: inline-flex; align-items: center; text-decoration: none;">
+            Create Free Account
+        </a>
+        <% } %>
+    </div>
+</section>
+
+<section class="feature-grid">
+    <a href="/lost-found" class="feature-card">
+        <div class="feature-icon">
+            <i class="fa-solid fa-magnifying-glass-location"></i>
+        </div>
+        <h3>Lost & Found</h3>
+        <p>Misplaced your ID card or found a stray water bottle? Create immediate campus-wide alerts to reunite items with their owners.</p>
+    </a>
+    
+    <a href="/notes" class="feature-card">
+        <div class="feature-icon">
+            <i class="fa-solid fa-file-pdf"></i>
+        </div>
+        <h3>Study Notes Hub</h3>
+        <p>A collaborative vault for sharing lecture slides, handwritten PDFs, and past year question papers organized by semester and branch.</p>
+    </a>
+    
+    <a href="/donations" class="feature-card">
+        <div class="feature-icon">
+            <i class="fa-solid fa-hand-holding-heart"></i>
+        </div>
+        <h3>Give & Request</h3>
+        <p>Don't throw away that old engineering drawing kit or textbook! Hand it down to juniors easily through our donation board.</p>
+    </a>
+</section>
+
+
+
+<% if (!user) { %>
+<div style="text-align: center; margin: 6rem 0 4rem; padding: 4rem 2rem; border: 1px solid var(--border); border-radius: 8px;">
+    <h2 style="font-size: 2rem; margin-bottom: 1rem; font-weight: 800; letter-spacing: -1px;">Ready to join the community?</h2>
+    <p style="color: var(--text-muted); margin-bottom: 2rem;">Get started by logging in or creating your secure student account.</p>
+    <a href="/register" class="btn btn-lg">Create Free Account</a>
+</div>
+<% } %>
+
+<%- include('partials/footer') %>

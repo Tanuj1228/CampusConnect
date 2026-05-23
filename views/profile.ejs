@@ -1,0 +1,473 @@
+<%- include('partials/header') %>
+
+<div style="max-width: 1000px; margin: 4rem auto; padding: 0 1rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2>My Profile</h2>
+        <a href="/profile/edit" class="btn"><i class="fa-solid fa-pen-to-square"></i> Edit Profile</a>
+    </div>
+
+    <div class="glass-card" style="display: flex; gap: 2rem; align-items: center; margin-bottom: 2rem; flex-wrap: wrap;">
+        <div>
+            <% if (profileUser.profile_picture) { %>
+                <img src="<%= profileUser.profile_picture %>" alt="Profile" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary);">
+            <% } else { %>
+                <div style="width: 120px; height: 120px; border-radius: 50%; background: var(--bg-hover); border: 3px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 3rem; color: var(--text-muted);">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+            <% } %>
+        </div>
+        <div style="flex: 1;">
+            <h3 style="font-size: 1.8rem; margin-bottom: 0.5rem;"><%= profileUser.full_name || profileUser.username %></h3>
+            <p style="color: var(--text-muted); margin-bottom: 0.5rem;">@<%= profileUser.username %></p>
+            <p style="margin-bottom: 1rem;"><i class="fa-solid fa-envelope" style="color: var(--text-muted);"></i> <%= profileUser.email %></p>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.9rem;">
+                <span class="badge" style="background: var(--bg); border: 1px solid var(--border); color: var(--text);"><i class="fa-solid fa-calendar"></i> Joined: <%= new Date(profileUser.created_at).toLocaleDateString() %></span>
+                <% if (profileUser.last_login) { %>
+                    <span class="badge" style="background: var(--bg); border: 1px solid var(--border); color: var(--text);"><i class="fa-solid fa-clock"></i> Last Login: <%= new Date(profileUser.last_login).toLocaleDateString() %></span>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <h3 style="margin-bottom: 1rem;">My Activity Statistics</h3>
+    <div class="feature-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+        <a href="/lost-found?my_posts=true" class="feature-card" style="text-align: center; text-decoration: none;">
+            <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem;"><%= stats.lostFound %></div>
+            <p>Lost & Found Posts</p>
+        </a>
+        <a href="/notes" class="feature-card" style="text-align: center; text-decoration: none;">
+            <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem;"><%= stats.notes %></div>
+            <p>Notes Uploaded</p>
+        </a>
+        <a href="/donations" class="feature-card" style="text-align: center; text-decoration: none;">
+            <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem;"><%= stats.donations %></div>
+            <p>Donations Made</p>
+        </a>
+        <a href="/complaints" class="feature-card" style="text-align: center; text-decoration: none;">
+            <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem;"><%= stats.complaints %></div>
+            <p>Complaints Submitted</p>
+        </a>
+    </div>
+    <h3 style="margin-top: 3rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--primary); padding-bottom: 0.5rem;"><i class="fa-solid fa-chart-line"></i> My Student Dashboard</h3>
+    
+    <!-- Dashboard Tabs -->
+    <div style="display: flex; gap: 0.5rem; margin-bottom: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; flex-wrap: wrap;">
+        <button onclick="switchProfileTab('activities-tab')" id="btn-activities-tab" class="profile-tab-btn active-profile-tab" style="padding: 0.6rem 1.2rem; font-weight: bold; background: none; border: none; color: var(--text); cursor: pointer; border-radius: 4px; font-size: 0.95rem;">
+            <i class="fa-solid fa-list-ul"></i> Activity History
+        </button>
+        <button onclick="switchProfileTab('lostfound-tab')" id="btn-lostfound-tab" class="profile-tab-btn" style="padding: 0.6rem 1.2rem; font-weight: bold; background: none; border: none; color: var(--text-muted); cursor: pointer; border-radius: 4px; font-size: 0.95rem;">
+            <i class="fa-solid fa-magnifying-glass-location"></i> Lost & Found
+        </button>
+        <button onclick="switchProfileTab('donations-tab')" id="btn-donations-tab" class="profile-tab-btn" style="padding: 0.6rem 1.2rem; font-weight: bold; background: none; border: none; color: var(--text-muted); cursor: pointer; border-radius: 4px; font-size: 0.95rem;">
+            <i class="fa-solid fa-hand-holding-heart"></i> Donations
+        </button>
+        <button onclick="switchProfileTab('complaints-tab')" id="btn-complaints-tab" class="profile-tab-btn" style="padding: 0.6rem 1.2rem; font-weight: bold; background: none; border: none; color: var(--text-muted); cursor: pointer; border-radius: 4px; font-size: 0.95rem;">
+            <i class="fa-solid fa-circle-exclamation"></i> Complaints
+        </button>
+    </div>
+
+    <!-- Tab Contents -->
+    <div id="profile-tabs-container">
+        <!-- 1. Activity Log Tab -->
+        <div id="activities-tab" class="profile-tab-content">
+            <h4 style="margin-bottom: 1rem;"><i class="fa-solid fa-clock-rotate-left"></i> My Recent Activity Logs</h4>
+            <% if (locals.myActivities && myActivities.length > 0) { %>
+                <div class="glass-card" style="padding: 1.5rem;">
+                    <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                        <% myActivities.forEach(act => { %>
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.8rem; flex-wrap: wrap; gap: 0.5rem;">
+                                <div style="display: flex; align-items: center; gap: 0.8rem;">
+                                    <span class="badge" style="background: rgba(99, 102, 241, 0.05); color: var(--primary); border: 1px solid var(--primary); text-transform: uppercase; font-size: 0.75rem;"><%= act.activity_type %></span>
+                                    <span style="font-weight: 500;"><%= act.description %></span>
+                                </div>
+                                <span style="font-size: 0.8rem; color: var(--text-muted);"><%= new Date(act.created_at).toLocaleString() %></span>
+                            </div>
+                        <% }) %>
+                    </div>
+                </div>
+            <% } else { %>
+                <p style="color: var(--text-muted);">No activity logged yet.</p>
+            <% } %>
+        </div>
+
+        <!-- 2. Lost & Found Tab -->
+        <div id="lostfound-tab" class="profile-tab-content" style="display: none;">
+            <!-- Sub-section 2.1: Posted Items -->
+            <div style="margin-bottom: 2.5rem;">
+                <h4 style="margin-bottom: 1rem;"><i class="fa-solid fa-clipboard-list"></i> My Reported Listings</h4>
+                <% if (locals.myLostFound && myLostFound.length > 0) { %>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left;" class="glass-card">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border);">
+                                    <th style="padding: 1rem;">Item Title</th>
+                                    <th style="padding: 1rem;">Type</th>
+                                    <th style="padding: 1rem;">Date Posted</th>
+                                    <th style="padding: 1rem;">Status</th>
+                                    <th style="padding: 1rem; text-align: right;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% myLostFound.forEach(item => { %>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 1rem; font-weight: bold;"><%= item.title %></td>
+                                        <td style="padding: 1rem;"><span class="badge" style="text-transform: uppercase;"><%= item.type %></span></td>
+                                        <td style="padding: 1rem;"><%= new Date(item.created_at).toLocaleDateString() %></td>
+                                        <td style="padding: 1rem;">
+                                            <% 
+                                                let badgeColor = '#ca8a04';
+                                                if (item.status === 'Claimed') badgeColor = '#2563eb';
+                                                else if (item.status === 'Resolved') badgeColor = '#16a34a';
+                                            %>
+                                            <span style="color: <%= badgeColor %>; font-weight: bold;"><%= item.status %></span>
+                                        </td>
+                                        <td style="padding: 1rem; text-align: right;">
+                                            <a href="/lost-found/<%= item.id %>" class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; text-decoration: none;">View Details</a>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">You haven't posted any lost/found items yet.</p>
+                <% } %>
+            </div>
+
+            <!-- Sub-section 2.2: Items Returned to Others -->
+            <div style="margin-bottom: 2.5rem;">
+                <h4 style="margin-bottom: 1rem;"><i class="fa-solid fa-hand-holding-heart"></i> Items I Returned to Owner</h4>
+                <% if (locals.myReturnedItems && myReturnedItems.length > 0) { %>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left;" class="glass-card">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border);">
+                                    <th style="padding: 1rem;">Item Title</th>
+                                    <th style="padding: 1rem;">Returned To</th>
+                                    <th style="padding: 1rem;">Date Resolved</th>
+                                    <th style="padding: 1rem;">Status</th>
+                                    <th style="padding: 1rem; text-align: right;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% myReturnedItems.forEach(item => { %>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 1rem; font-weight: bold;"><%= item.title %></td>
+                                        <td style="padding: 1rem;">@<%= item.username %></td>
+                                        <td style="padding: 1rem;"><%= new Date(item.created_at).toLocaleDateString() %></td>
+                                        <td style="padding: 1rem;"><span style="color: #16a34a; font-weight: bold;">Returned / Resolved</span></td>
+                                        <td style="padding: 1rem; text-align: right;">
+                                            <a href="/lost-found/<%= item.id %>" class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; text-decoration: none;">View Details</a>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">You haven't returned any items to others yet.</p>
+                <% } %>
+            </div>
+
+            <!-- Sub-section 2.3: My Recovered Items -->
+            <div style="margin-bottom: 2.5rem;">
+                <h4 style="margin-bottom: 1rem;"><i class="fa-solid fa-gift"></i> Items Returned to Me (My Lost Belongings Recovered)</h4>
+                <% if (locals.myRecoveredItems && myRecoveredItems.length > 0) { %>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left;" class="glass-card">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border);">
+                                    <th style="padding: 1rem;">Item Title</th>
+                                    <th style="padding: 1rem;">Returned By</th>
+                                    <th style="padding: 1rem;">Date Resolved</th>
+                                    <th style="padding: 1rem;">Status</th>
+                                    <th style="padding: 1rem; text-align: right;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% myRecoveredItems.forEach(item => { %>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 1rem; font-weight: bold;"><%= item.title %></td>
+                                        <td style="padding: 1rem;">@<%= item.username %></td>
+                                        <td style="padding: 1rem;"><%= new Date(item.created_at).toLocaleDateString() %></td>
+                                        <td style="padding: 1rem;"><span style="color: #16a34a; font-weight: bold;">Recovered / Resolved</span></td>
+                                        <td style="padding: 1rem; text-align: right;">
+                                            <a href="/lost-found/<%= item.id %>" class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; text-decoration: none;">View Details</a>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">You haven't recovered any of your lost items yet.</p>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- 3. Donations Tab -->
+        <div id="donations-tab" class="profile-tab-content" style="display: none;">
+            <!-- Sub-section 3.1: Offers Posted -->
+            <div style="margin-bottom: 2.5rem;">
+                <h4 style="margin-bottom: 1rem;"><i class="fa-solid fa-gift"></i> My Donation Offers (Items I Listed to Donate)</h4>
+                <% if (locals.myOffers && myOffers.length > 0) { %>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left;" class="glass-card">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border);">
+                                    <th style="padding: 1rem;">Item Title</th>
+                                    <th style="padding: 1rem;">Category</th>
+                                    <th style="padding: 1rem;">Date Posted</th>
+                                    <th style="padding: 1rem;">Status</th>
+                                    <th style="padding: 1rem; text-align: right;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% myOffers.forEach(item => { %>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 1rem; font-weight: bold;"><%= item.title %></td>
+                                        <td style="padding: 1rem;"><%= item.category %></td>
+                                        <td style="padding: 1rem;"><%= new Date(item.created_at).toLocaleDateString() %></td>
+                                        <td style="padding: 1rem;">
+                                            <% 
+                                                let badgeColor = '#16a34a';
+                                                let label = item.status;
+                                                if (item.status === 'Requested') { badgeColor = '#ea580c'; label = 'Requested / In Progress'; }
+                                                else if (item.status === 'Donated') { badgeColor = '#6b7280'; label = 'Completed'; }
+                                            %>
+                                            <span style="color: <%= badgeColor %>; font-weight: bold;"><%= label %></span>
+                                        </td>
+                                        <td style="padding: 1rem; text-align: right;">
+                                            <a href="/donations" class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; text-decoration: none;">View Feed</a>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">You haven't listed any items for donation yet.</p>
+                <% } %>
+            </div>
+
+            <!-- Sub-section 3.2: Material Requests Posted -->
+            <div style="margin-bottom: 2.5rem;">
+                <h4 style="margin-bottom: 1rem;"><i class="fa-solid fa-hand-holding-heart"></i> My Requested Items (Demands I Posted)</h4>
+                <% if (locals.myRequests && myRequests.length > 0) { %>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left;" class="glass-card">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border);">
+                                    <th style="padding: 1rem;">Item Title</th>
+                                    <th style="padding: 1rem;">Category</th>
+                                    <th style="padding: 1rem;">Date Posted</th>
+                                    <th style="padding: 1rem;">Status</th>
+                                    <th style="padding: 1rem; text-align: right;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% myRequests.forEach(item => { %>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 1rem; font-weight: bold;"><%= item.title %></td>
+                                        <td style="padding: 1rem;"><%= item.category %></td>
+                                        <td style="padding: 1rem;"><%= new Date(item.created_at).toLocaleDateString() %></td>
+                                        <td style="padding: 1rem;">
+                                            <% 
+                                                let badgeColor = '#16a34a';
+                                                let label = item.status;
+                                                if (item.status === 'Requested') { badgeColor = '#ea580c'; label = 'In Progress'; }
+                                                else if (item.status === 'Donated') { badgeColor = '#6b7280'; label = 'Completed'; }
+                                            %>
+                                            <span style="color: <%= badgeColor %>; font-weight: bold;"><%= label %></span>
+                                        </td>
+                                        <td style="padding: 1rem; text-align: right;">
+                                            <a href="/donations" class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; text-decoration: none;">View Feed</a>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">You haven't posted any material requests yet.</p>
+                <% } %>
+            </div>
+
+            <!-- Sub-section 3.3: Donations Given (Handover History) -->
+            <div style="margin-bottom: 2.5rem;">
+                <h4 style="margin-bottom: 1rem;"><i class="fa-solid fa-check-double"></i> Donations Handed Over (Items I Donated)</h4>
+                <% if (locals.myDonationsGiven && myDonationsGiven.length > 0) { %>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left;" class="glass-card">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border);">
+                                    <th style="padding: 1rem;">Item Title</th>
+                                    <th style="padding: 1rem;">Donated To (Recipient)</th>
+                                    <th style="padding: 1rem;">Completion Date</th>
+                                    <th style="padding: 1rem;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% myDonationsGiven.forEach(item => { %>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 1rem; font-weight: bold;"><%= item.title %></td>
+                                        <td style="padding: 1rem;">
+                                            <% 
+                                                let recName = 'N/A';
+                                                if (item.donation_type === 'offer') recName = item.requester_username || 'Student';
+                                                else recName = item.username || 'Student';
+                                            %>
+                                            @<%= recName %>
+                                        </td>
+                                        <td style="padding: 1rem;"><%= new Date(item.created_at).toLocaleDateString() %></td>
+                                        <td style="padding: 1rem;"><span style="color: #16a34a; font-weight: bold;">Completed</span></td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">You haven't completed donating any items yet.</p>
+                <% } %>
+            </div>
+
+            <!-- Sub-section 3.4: Donations Received (Handover History) -->
+            <div style="margin-bottom: 2.5rem;">
+                <h4 style="margin-bottom: 1rem;"><i class="fa-solid fa-gift"></i> Donations Received (Items I Got from Others)</h4>
+                <% if (locals.myDonationsReceived && myDonationsReceived.length > 0) { %>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left;" class="glass-card">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border);">
+                                    <th style="padding: 1rem;">Item Title</th>
+                                    <th style="padding: 1rem;">Received From (Donor)</th>
+                                    <th style="padding: 1rem;">Completion Date</th>
+                                    <th style="padding: 1rem;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% myDonationsReceived.forEach(item => { %>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 1rem; font-weight: bold;"><%= item.title %></td>
+                                        <td style="padding: 1rem;">
+                                            <% 
+                                                let donName = 'N/A';
+                                                if (item.donation_type === 'offer') donName = item.username || 'Student';
+                                                else donName = item.donor_username || 'Student';
+                                            %>
+                                            @<%= donName %>
+                                        </td>
+                                        <td style="padding: 1rem;"><%= new Date(item.created_at).toLocaleDateString() %></td>
+                                        <td style="padding: 1rem;"><span style="color: #16a34a; font-weight: bold;">Received / Completed</span></td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">You haven't received any donations yet.</p>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- 4. Complaints Tab -->
+        <div id="complaints-tab" class="profile-tab-content" style="display: none;">
+            <h4 style="margin-bottom: 1rem;"><i class="fa-solid fa-circle-exclamation"></i> Submitted Complaints</h4>
+            <% if (locals.myComplaints && myComplaints.length > 0) { %>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;" class="glass-card">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border);">
+                                <th style="padding: 1rem;">Title</th>
+                                <th style="padding: 1rem;">Category</th>
+                                <th style="padding: 1rem;">Date Filed</th>
+                                <th style="padding: 1rem;">Status</th>
+                                <th style="padding: 1rem; text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% myComplaints.forEach(complaint => { %>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td style="padding: 1rem; font-weight: bold;"><%= complaint.title %></td>
+                                    <td style="padding: 1rem;"><%= complaint.category %></td>
+                                    <td style="padding: 1rem;"><%= new Date(complaint.created_at).toLocaleDateString() %></td>
+                                    <td style="padding: 1rem;">
+                                        <% 
+                                            let badgeColor = '#ca8a04';
+                                            if (complaint.status === 'In Progress') badgeColor = '#2563eb';
+                                            else if (complaint.status === 'Resolved') badgeColor = '#16a34a';
+                                            else if (complaint.status === 'Rejected') badgeColor = '#dc2626';
+                                        %>
+                                        <span style="color: <%= badgeColor %>; font-weight: bold;"><%= complaint.status %></span>
+                                    </td>
+                                    <td style="padding: 1rem; text-align: right;">
+                                        <a href="/complaints" class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; text-decoration: none;">View Detail</a>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } else { %>
+                <p style="color: var(--text-muted);">No complaints submitted yet.</p>
+            <% } %>
+        </div>
+
+
+    </div>
+
+    <!-- Scripts to support Tab switching -->
+    <script>
+        function switchProfileTab(tabId) {
+            // Hide all main tab contents
+            document.querySelectorAll('.profile-tab-content').forEach(el => el.style.display = 'none');
+            // Show current main tab content
+            document.getElementById(tabId).style.display = 'block';
+
+            // Update profile tab buttons style
+            document.querySelectorAll('.profile-tab-btn').forEach(btn => {
+                btn.classList.remove('active-profile-tab');
+                btn.style.color = 'var(--text-muted)';
+            });
+            const activeBtn = document.getElementById('btn-' + tabId);
+            if (activeBtn) {
+                activeBtn.classList.add('active-profile-tab');
+                activeBtn.style.color = 'var(--text)';
+            }
+        }
+
+        function switchSavedTab(savedSubTabId) {
+            // Hide all saved sub-tab contents
+            document.querySelectorAll('.saved-tab-content').forEach(el => el.style.display = 'none');
+            // Show current saved sub-tab content
+            document.getElementById(savedSubTabId).style.display = 'block';
+
+            // Update saved sub-tab buttons style
+            document.querySelectorAll('.saved-tab-btn').forEach(btn => {
+                btn.classList.remove('active-saved-tab');
+                btn.style.color = 'var(--text-muted)';
+            });
+            const activeBtn = document.getElementById('btn-' + savedSubTabId);
+            if (activeBtn) {
+                activeBtn.classList.add('active-saved-tab');
+                activeBtn.style.color = 'var(--text)';
+            }
+        }
+    </script>
+
+    <style>
+        .active-profile-tab {
+            border-bottom: 3px solid var(--primary) !important;
+            background: rgba(var(--primary-rgb), 0.05) !important;
+        }
+        .active-saved-tab {
+            border-bottom: 2px solid var(--primary) !important;
+            background: rgba(var(--primary-rgb), 0.03) !important;
+        }
+        .profile-tab-btn:hover, .saved-tab-btn:hover {
+            color: var(--primary) !important;
+        }
+    </style>
+</div>
+
+<%- include('partials/footer') %>

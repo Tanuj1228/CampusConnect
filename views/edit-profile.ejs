@@ -1,0 +1,56 @@
+<%- include('partials/header') %>
+
+<div class="glass-card" style="max-width: 600px; margin: 4rem auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2>Edit Profile</h2>
+        <a href="/profile" class="btn btn-outline" style="text-decoration: none; padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 6px; color: var(--text);">Back to Profile</a>
+    </div>
+    
+    <% if (typeof success !== 'undefined' && success) { %>
+        <div style="background: rgba(34, 197, 94, 0.2); color: #22c55e; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+            <%= success %>
+        </div>
+    <% } %>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+        <div style="background: rgba(239, 68, 68, 0.2); color: var(--danger); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+            <%= error %>
+        </div>
+    <% } %>
+
+    <form action="/profile/edit" method="POST" enctype="multipart/form-data">
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem;">
+            <label>Current Profile Picture</label>
+            <div style="margin-bottom: 0.5rem;">
+                <% if (profileUser.profile_picture) { %>
+                    <img src="<%= profileUser.profile_picture %>" alt="Profile" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);">
+                <% } else { %>
+                    <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--bg-hover); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--text-muted);">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                <% } %>
+            </div>
+            <label for="profile_picture" style="font-size: 0.9rem; color: var(--text-muted);">Upload New Picture (Optional)</label>
+            <input type="file" id="profile_picture" name="profile_picture" accept="image/*" style="padding: 0.5rem; background: var(--bg); border-radius: 8px; border: 1px solid var(--border);">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem;">
+            <label for="full_name">Full Name</label>
+            <input type="text" id="full_name" name="full_name" value="<%= profileUser.full_name || '' %>" placeholder="John Doe">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem;">
+            <label for="username">Username (Cannot be changed)</label>
+            <input type="text" id="username" value="<%= profileUser.username %>" disabled style="opacity: 0.7; cursor: not-allowed; background: var(--bg-hover);">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 2rem;">
+            <label for="email">Email Address (Cannot be changed)</label>
+            <input type="email" id="email" value="<%= profileUser.email %>" disabled style="opacity: 0.7; cursor: not-allowed; background: var(--bg-hover);">
+        </div>
+        
+        <button type="submit" class="btn" style="width: 100%;">Save Changes</button>
+    </form>
+</div>
+
+<%- include('partials/footer') %>

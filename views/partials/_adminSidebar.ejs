@@ -1,0 +1,66 @@
+<div class="admin-sidebar" style="width: 250px; background: var(--surface); border-right: 1px solid var(--border); padding: 2rem 1rem; height: calc(100vh - 70px); position: sticky; top: 70px; overflow-y: auto;">
+    <h3 style="font-size: 0.9rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 1rem; padding-left: 1rem;">Platform</h3>
+    <ul style="list-style: none; padding: 0; margin: 0 0 2rem 0;">
+        <li>
+            <a href="/admin/dashboard" style="display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1rem; border-radius: 8px; color: var(--text); text-decoration: none; transition: all 0.2s; margin-bottom: 0.2rem;" class="<%= locals.activeMenu === 'dashboard' ? 'active-nav' : '' %>">
+                <i class="fa-solid fa-chart-line" style="width: 20px; text-align: center;"></i> Overview
+            </a>
+        </li>
+        <li>
+            <a href="/admin/users" style="display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1rem; border-radius: 8px; color: var(--text); text-decoration: none; transition: all 0.2s; margin-bottom: 0.2rem;" class="<%= locals.activeMenu === 'users' ? 'active-nav' : '' %>">
+                <i class="fa-solid fa-users" style="width: 20px; text-align: center;"></i> User Management
+            </a>
+        </li>
+        <li>
+            <a href="/admin/reports" style="display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1rem; border-radius: 8px; color: var(--text); text-decoration: none; transition: all 0.2s; margin-bottom: 0.2rem;" class="<%= locals.activeMenu === 'reports' ? 'active-nav' : '' %>">
+                <i class="fa-solid fa-flag" style="width: 20px; text-align: center;"></i> Reported Content
+            </a>
+        </li>
+        <li>
+            <a href="/admin/logs" style="display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1rem; border-radius: 8px; color: var(--text); text-decoration: none; transition: all 0.2s; margin-bottom: 0.2rem;" class="<%= locals.activeMenu === 'logs' ? 'active-nav' : '' %>">
+                <i class="fa-solid fa-clipboard-list" style="width: 20px; text-align: center;"></i> Activity Logs
+            </a>
+        </li>
+    </ul>
+
+    <h3 style="font-size: 0.9rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 1rem; padding-left: 1rem;">Modules</h3>
+    <ul style="list-style: none; padding: 0; margin: 0;">
+        <li>
+            <a href="/admin/complaints" style="display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1rem; border-radius: 8px; color: var(--text); text-decoration: none; transition: all 0.2s; margin-bottom: 0.2rem;" class="<%= locals.activeMenu === 'complaints' ? 'active-nav' : '' %>">
+                <i class="fa-solid fa-triangle-exclamation" style="width: 20px; text-align: center;"></i> Complaints
+            </a>
+        </li>
+        <li>
+            <a href="/admin/lost-found" style="display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1rem; border-radius: 8px; color: var(--text); text-decoration: none; transition: all 0.2s; margin-bottom: 0.2rem;" class="<%= locals.activeMenu === 'lost-found' ? 'active-nav' : '' %>">
+                <i class="fa-solid fa-box-open" style="width: 20px; text-align: center;"></i> Lost & Found
+            </a>
+        </li>
+        <li>
+            <a href="/admin/lost-found/claims" style="display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1rem; border-radius: 8px; color: var(--text); text-decoration: none; transition: all 0.2s; margin-bottom: 0.2rem;" class="<%= locals.activeMenu === 'lost-found-claims' ? 'active-nav' : '' %>">
+                <i class="fa-solid fa-file-shield" style="width: 20px; text-align: center;"></i> L&F Claims
+            </a>
+        </li>
+        <li>
+            <a href="/admin/donations" style="display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1rem; border-radius: 8px; color: var(--text); text-decoration: none; transition: all 0.2s; margin-bottom: 0.2rem;" class="<%= locals.activeMenu === 'donations' ? 'active-nav' : '' %>">
+                <i class="fa-solid fa-hand-holding-heart" style="width: 20px; text-align: center;"></i> Donations
+            </a>
+        </li>
+        <li>
+            <a href="/admin/notes" style="display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1rem; border-radius: 8px; color: var(--text); text-decoration: none; transition: all 0.2s; margin-bottom: 0.2rem;" class="<%= locals.activeMenu === 'notes' ? 'active-nav' : '' %>">
+                <i class="fa-solid fa-book" style="width: 20px; text-align: center;"></i> Study Notes
+            </a>
+        </li>
+    </ul>
+</div>
+
+<style>
+    .admin-sidebar a:hover {
+        background: var(--bg-hover);
+        color: var(--primary);
+    }
+    .admin-sidebar a.active-nav {
+        background: var(--primary);
+        color: var(--bg) !important;
+        font-weight: 600;
+    }
+</style>

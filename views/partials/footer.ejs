@@ -1,0 +1,81 @@
+    </main>
+    <footer>
+        <p>&copy; <%= new Date().getFullYear() %> Campus Connect. All rights reserved.</p>
+    </footer>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        socket.on('item_resolved', (data) => {
+            alert(`A lost/found item "${data.title}" was just resolved!`);
+        });
+
+        socket.on('donation_claimed', (data) => {
+            alert(`Donation "${data.title}" was claimed by ${data.claimed_by}!`);
+        });
+    </script>
+<!-- Global Report Modal -->
+<div id="reportModal" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+    <div class="glass-card" style="width: 100%; max-width: 400px; padding: 2rem; position: relative;">
+        <button onclick="closeReportModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem;">&times;</button>
+        <h2 style="margin-bottom: 1rem;">Report Content</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Please tell us why you are reporting this content.</p>
+        
+        <form id="reportForm">
+            <input type="hidden" id="reportItemType" name="item_type">
+            <input type="hidden" id="reportItemId" name="item_id">
+            
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Reason</label>
+                <select name="reason" style="width: 100%; padding: 0.8rem; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text);" required>
+                    <option value="Spam">Spam / Advertising</option>
+                    <option value="Fake Information">Fake Information</option>
+                    <option value="Inappropriate Content">Inappropriate Content</option>
+                    <option value="Duplicate Post">Duplicate Post</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn" style="width: 100%; background: #ef4444;">Submit Report</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function openReportModal(type, id) {
+    document.getElementById('reportItemType').value = type;
+    document.getElementById('reportItemId').value = id;
+    document.getElementById('reportModal').style.display = 'flex';
+}
+
+function closeReportModal() {
+    document.getElementById('reportModal').style.display = 'none';
+}
+
+document.getElementById('reportForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = new FormData(e.target);
+    const body = Object.fromEntries(data.entries());
+    
+    try {
+        const res = await fetch('/report', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const result = await res.json();
+        if (result.success) {
+            alert(result.message);
+            closeReportModal();
+        } else {
+            alert(result.error);
+        }
+    } catch (err) {
+        alert('An error occurred while submitting the report.');
+    }
+});
+</script>
+
+</body>
+</html>
