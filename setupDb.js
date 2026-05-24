@@ -3,7 +3,6 @@ require('dotenv').config();
 
 async function setupDatabase() {
     try {
-        // First connection without database name to create the database if it doesn't exist
         const connection = await mysql.createConnection({
             host: process.env.DB_HOST || '127.0.0.1',
             port: process.env.DB_PORT || 3306,
@@ -15,17 +14,21 @@ async function setupDatabase() {
         await connection.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME || 'campus_connect'}\`;`);
         await connection.query(`USE \`${process.env.DB_NAME || 'campus_connect'}\`;`);
 
-        console.log('Creating Users table...');
+        console.log('Creating/Updating Users table...');
         await connection.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(255) NOT NULL,
                 email VARCHAR(255) NOT NULL UNIQUE,
                 password_hash VARCHAR(255) NOT NULL,
+                full_name VARCHAR(255),
                 role ENUM('student', 'admin') DEFAULT 'student',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
+        try {
+            await connection.query("ALTER TABLE users ADD COLUMN full_name VARCHAR(255);");
+        } catch(err) {}
 
         console.log('Creating Lost and Found table...');
         await connection.query(`
