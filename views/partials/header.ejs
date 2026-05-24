@@ -192,7 +192,7 @@
             }
 
             // Socket Logic
-            const socket = io();
+            var socket = io();
             <% if (user) { %>
                 socket.emit('joinUserRoom', <%= user.id %>);
                 socket.on('notification', (data) => {
