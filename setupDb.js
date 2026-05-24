@@ -28,15 +28,10 @@ async function setupDatabase() {
             );
         `);
         
-        try {
-            await connection.query("ALTER TABLE users ADD COLUMN full_name VARCHAR(255);");
-        } catch(err) {}
-        
-        try {
-            await connection.query("ALTER TABLE users ADD COLUMN last_login TIMESTAMP NULL;");
-        } catch(err) {}
+        try { await connection.query("ALTER TABLE users ADD COLUMN full_name VARCHAR(255);"); } catch(err) {}
+        try { await connection.query("ALTER TABLE users ADD COLUMN last_login TIMESTAMP NULL;"); } catch(err) {}
 
-        console.log('Creating Lost and Found table...');
+        console.log('Creating/Updating Lost and Found table...');
         await connection.query(`
             CREATE TABLE IF NOT EXISTS lost_found_items (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -50,10 +45,17 @@ async function setupDatabase() {
                 type ENUM('lost', 'found') NOT NULL,
                 status ENUM('active', 'resolved') DEFAULT 'active',
                 verification_pin VARCHAR(255),
+                is_approved BOOLEAN DEFAULT 1,
+                returned_by_id INT NULL,
+                received_by_id INT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             );
         `);
+
+        try { await connection.query("ALTER TABLE lost_found_items ADD COLUMN is_approved BOOLEAN DEFAULT 1;"); } catch(err) {}
+        try { await connection.query("ALTER TABLE lost_found_items ADD COLUMN returned_by_id INT NULL;"); } catch(err) {}
+        try { await connection.query("ALTER TABLE lost_found_items ADD COLUMN received_by_id INT NULL;"); } catch(err) {}
 
         console.log('Creating Notes table...');
         await connection.query(`
