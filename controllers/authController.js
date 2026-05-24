@@ -242,7 +242,7 @@ exports.postFirebaseLogin = async (req, res) => {
             // Set dummy password hash to prevent standard credentials login
             const dummyPasswordHash = await bcrypt.hash('firebase_google_auth_placeholder_' + Math.random(), 10);
             
-            const newUserId = await User.create(username, email, dummyPasswordHash, name, 'student');
+            const newUserId = await User.create(username, email, dummyPasswordHash, name);
             user = await User.findById(newUserId);
         }
 

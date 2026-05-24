@@ -5,7 +5,7 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
+        var socket = io();
 
         socket.on('item_resolved', (data) => {
             alert(`A lost/found item "${data.title}" was just resolved!`);
