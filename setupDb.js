@@ -73,7 +73,7 @@ async function setupDatabase() {
             );
         `);
 
-        console.log('Creating Donations table...');
+        console.log('Creating/Updating Donations table...');
         await connection.query(`
             CREATE TABLE IF NOT EXISTS donations (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -83,10 +83,15 @@ async function setupDatabase() {
                 image_url VARCHAR(255),
                 contact_info VARCHAR(255) NOT NULL,
                 status ENUM('available', 'claimed') DEFAULT 'available',
+                donor_id INT NULL,
+                requester_id INT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             );
         `);
+
+        try { await connection.query("ALTER TABLE donations ADD COLUMN donor_id INT NULL;"); } catch(err) {}
+        try { await connection.query("ALTER TABLE donations ADD COLUMN requester_id INT NULL;"); } catch(err) {}
 
         console.log('Database setup completed successfully.');
         await connection.end();
