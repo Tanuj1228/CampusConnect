@@ -23,11 +23,17 @@ async function setupDatabase() {
                 password_hash VARCHAR(255) NOT NULL,
                 full_name VARCHAR(255),
                 role ENUM('student', 'admin') DEFAULT 'student',
+                last_login TIMESTAMP NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
+        
         try {
             await connection.query("ALTER TABLE users ADD COLUMN full_name VARCHAR(255);");
+        } catch(err) {}
+        
+        try {
+            await connection.query("ALTER TABLE users ADD COLUMN last_login TIMESTAMP NULL;");
         } catch(err) {}
 
         console.log('Creating Lost and Found table...');
